@@ -1,0 +1,24 @@
+{
+  "name": "assistente-vida",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema pessoal de organizacao com web mobile, API, PostgreSQL e Telegram.",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
+    "build": "npm run build --workspaces",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run prisma:migrate -w apps/api",
+    "local:setup": "npm run local:generate -w apps/api && npm run local:db -w apps/api && npm run seed -w apps/api",
+    "db:studio": "npm run prisma:studio -w apps/api",
+    "seed": "npm run seed -w apps/api",
+    "typecheck": "npm run typecheck --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

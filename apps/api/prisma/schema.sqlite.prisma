@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(cuid())
+  name           String
+  email          String          @unique
+  passwordHash   String
+  role           String          @default("USER")
+  timezone       String          @default("America/Sao_Paulo")
+  dailySummaryEnabled Boolean    @default(true)
+  dailySummaryTime    String     @default("07:00")
+  lastDailySummaryAt  DateTime?
+  telegramChatId String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  tasks          Task[]
+  expenses       Expense[]
+  healthRecords  HealthRecord[]
+  fitnessEntries FitnessEntry[]
+  studyEntries   StudyEntry[]
+  documents      Document[]
+  notifications  Notification[]
+}
+
+model Task {
+  id            String         @id @default(cuid())
+  userId        String
+  title         String
+  notes         String?
+  type          String         @default("GENERAL")
+  status        String         @default("PENDING")
+  dueAt         DateTime?
+  remindAt      DateTime?
+  notifiedAt    DateTime?
+  recurrence    String         @default("NONE")
+  source        String         @default("text")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  completedAt   DateTime?
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([userId, dueAt])
+  @@index([userId, status])
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  userId      String
+  amount      Decimal
+  currency    String          @default("BRL")
+  description String
+  category    String          @default("OUTROS")
+  spentAt     DateTime        @default(now())
+  source      String          @default("text")
+  createdAt   DateTime        @default(now())
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, spentAt])
+  @@index([userId, category])
+}
+
+model HealthRecord {
+  id          String      @id @default(cuid())
+  userId      String
+  owner       String      @default("SELF")
+  type        String
+  title       String
+  provider    String?
+  scheduledAt DateTime?
+  notes       String?
+  documentId  String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document    Document?   @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([userId, scheduledAt])
+  @@index([userId, owner])
+}
+
+model FitnessEntry {
+  id         String      @id @default(cuid())
+  userId     String
+  type       String
+  title      String
+  value      Float?
+  unit       String?
+  occurredAt DateTime   @default(now())
+  goal       String?
+  notes      String?
+  createdAt  DateTime   @default(now())
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@index([userId, type])
+}
+
+model StudyEntry {
+  id              String      @id @default(cuid())
+  userId          String
+  subject         String
+  title           String
+  scheduledAt     DateTime?
+  durationMinutes Int?
+  weeklyGoal      String?
+  status          String      @default("PLANNED")
+  completedAt     DateTime?
+  notes           String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, scheduledAt])
+  @@index([userId, status])
+}
+
+model Document {
+  id            String         @id @default(cuid())
+  userId        String
+  originalName  String
+  filename      String
+  mimeType      String
+  size          Int
+  path          String
+  createdAt     DateTime       @default(now())
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  healthRecords HealthRecord[]
+
+  @@index([userId, createdAt])
+}
+
+model Notification {
+  id          String              @id @default(cuid())
+  userId      String
+  taskId      String?
+  title       String
+  body        String
+  channel     String
+  status      String              @default("PENDING")
+  scheduledAt DateTime
+  sentAt      DateTime?
+  error       String?
+  createdAt   DateTime            @default(now())
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task        Task?               @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([userId, status])
+}

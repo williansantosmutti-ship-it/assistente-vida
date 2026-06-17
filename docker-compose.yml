@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: assistente-vida-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: assistente
+      POSTGRES_PASSWORD: assistente
+      POSTGRES_DB: assistente_vida
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U assistente -d assistente_vida"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

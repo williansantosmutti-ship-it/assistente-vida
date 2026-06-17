@@ -1,0 +1,52 @@
+services:
+  - type: web
+    name: assistente-vida-api
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run prisma:generate -w apps/api && npm run build -w apps/api
+    preDeployCommand: npm run db:migrate -w apps/api && npm run seed -w apps/api
+    startCommand: npm run start -w apps/api
+    healthCheckPath: /health
+    disk:
+      name: uploads
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: assistente-vida-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: WEB_ORIGIN
+        sync: false
+      - key: UPLOAD_DIR
+        value: /data/uploads
+      - key: MASTER_USER_EMAIL
+        value: williansantos.mutti@gmail.com
+      - key: MASTER_USER_PASSWORD
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ENABLE_TELEGRAM_POLLING
+        value: true
+      - key: API_PUBLIC_URL
+        sync: false
+
+  - type: web
+    name: assistente-vida-web
+    runtime: static
+    buildCommand: npm install && npm run build -w apps/web
+    staticPublishPath: apps/web/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+
+databases:
+  - name: assistente-vida-db
+    databaseName: assistente_vida
+    user: assistente_vida
