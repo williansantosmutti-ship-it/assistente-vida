@@ -89,7 +89,7 @@ Para usar em qualquer lugar pelo celular, veja [DEPLOY.md](DEPLOY.md).
 
 Usuario master inicial:
 
-- E-mail: `williansantos.mutti@gmail.com`
+- E-mail: definido em `MASTER_USER_EMAIL` no `.env`.
 - Senha: definida em `MASTER_USER_PASSWORD` no `.env`.
 
 Por seguranca, a tela inicial nao permite criar conta. O cadastro publico `POST /auth/register` fica bloqueado. Novos usuarios devem ser criados dentro do sistema pela aba `Usuarios`, visivel apenas para o usuario master.
@@ -119,7 +119,7 @@ ENABLE_TELEGRAM_POLLING=true
 4. No Telegram, envie para o bot:
 
 ```text
-/start williansantos.mutti@gmail.com
+/start seu-email@exemplo.com
 ```
 
 Depois envie comandos como:

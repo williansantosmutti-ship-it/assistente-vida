@@ -53,7 +53,7 @@ Depois que os servicos forem criados, copie as URLs finais do Render:
 4. No Telegram, envie:
 
 ```text
-/start williansantos.mutti@gmail.com
+/start seu-email@exemplo.com
 ```
 
 Comandos uteis:
