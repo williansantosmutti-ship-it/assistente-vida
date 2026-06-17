@@ -61,3 +61,12 @@ healthRouter.patch("/:id", async (req: AuthRequest, res, next) => {
     next(error);
   }
 });
+
+healthRouter.delete("/:id", async (req: AuthRequest, res, next) => {
+  try {
+    await prisma.healthRecord.delete({ where: { id: req.params.id, userId: req.user!.userId } });
+    return res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});

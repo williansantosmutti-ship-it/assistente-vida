@@ -1,6 +1,6 @@
 import { prisma } from "../prisma.js";
-import { Recurrence } from "../domain.js";
-import { dateKeyInZone, timeInZone } from "../utils/date.js";
+import { Recurrence, TaskStatus } from "../domain.js";
+import { addDays, dateKeyInZone, startOfDay, timeInZone } from "../utils/date.js";
 import { buildTodayAgendaMessage } from "./agenda.js";
 import { nextOccurrence } from "./commandParser.js";
 import { sendTelegramMessage } from "./telegram.js";
@@ -12,10 +12,23 @@ export function startReminderScheduler() {
   timer = setInterval(() => {
     void processDueReminders();
     void processDailySummaries();
+    void processExpiredMissedTasks();
   }, 60_000);
 
   void processDueReminders();
   void processDailySummaries();
+  void processExpiredMissedTasks();
+}
+
+export async function processExpiredMissedTasks() {
+  const cutoff = startOfDay(addDays(new Date(), -7));
+  await prisma.task.updateMany({
+    where: {
+      status: TaskStatus.PENDING,
+      dueAt: { lt: cutoff }
+    },
+    data: { status: TaskStatus.CANCELLED }
+  });
 }
 
 export async function processDueReminders() {

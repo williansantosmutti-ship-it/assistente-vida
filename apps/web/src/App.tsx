@@ -1,5 +1,6 @@
 import {
   Activity,
+  AlertCircle,
   Bell,
   BookOpen,
   CalendarClock,
@@ -244,7 +245,7 @@ export function App() {
 }
 
 function AuthScreen({ onLogin }: { onLogin: (token: string) => void }) {
-  const [email, setEmail] = useState("williansantos.mutti@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -372,6 +373,7 @@ function HomeView({
 }) {
   const totalToday = dashboard?.todayTasks.length ?? 0;
   const totalMonth = dashboard?.expenses.total ?? 0;
+  const totalMissed = dashboard?.missedTasks.length ?? 0;
 
   return (
     <section className="screen">
@@ -392,6 +394,10 @@ function HomeView({
           <span>Estudos</span>
           <strong>{dashboard?.studiesPending.length ?? 0}</strong>
         </article>
+        <article className="stat accent-danger">
+          <span>Nao realizadas</span>
+          <strong>{totalMissed}</strong>
+        </article>
       </div>
 
       <Panel title="Hoje" icon={CheckSquare}>
@@ -402,17 +408,20 @@ function HomeView({
         </ItemList>
       </Panel>
 
+      <Panel title="Nao realizadas" icon={AlertCircle}>
+        <ItemList empty="Nenhuma tarefa vencida na ultima semana.">
+          {dashboard?.missedTasks.map((task) => (
+            <TaskRow key={task.id} task={task} onChanged={onRefresh} />
+          ))}
+        </ItemList>
+      </Panel>
+
       {user ? <ReminderSettings user={user} onUserChanged={onUserChanged} /> : null}
 
       <Panel title="Proximos" icon={CalendarClock}>
         <ItemList empty="Sem compromissos proximos.">
           {dashboard?.upcomingTasks.map((task) => (
-            <div className="list-item" key={task.id}>
-              <div>
-                <strong>{task.title}</strong>
-                <span>{dateTime(task.dueAt)} · {typeBadge(task.type)}</span>
-              </div>
-            </div>
+            <TaskRow key={task.id} task={task} onChanged={onRefresh} />
           ))}
         </ItemList>
       </Panel>
@@ -486,12 +495,17 @@ function ReminderSettings({ user, onUserChanged }: { user: User; onUserChanged: 
 
 function TasksView({ version, onChanged }: { version: number; onChanged: () => Promise<void> }) {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [missedTasks, setMissedTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState("");
   const [dueAt, setDueAt] = useState(localInput());
 
   const load = useCallback(async () => {
-    const payload = await api<{ tasks: Task[] }>("/tasks?status=PENDING");
-    setTasks(payload.tasks);
+    const [activePayload, missedPayload] = await Promise.all([
+      api<{ tasks: Task[] }>("/tasks?status=PENDING&active=true"),
+      api<{ tasks: Task[] }>("/tasks?missed=true")
+    ]);
+    setTasks(activePayload.tasks);
+    setMissedTasks(missedPayload.tasks);
   }, []);
 
   useEffect(() => {
@@ -520,6 +534,16 @@ function TasksView({ version, onChanged }: { version: number; onChanged: () => P
       <Panel title="Pendencias" icon={CheckSquare}>
         <ItemList empty="Lista vazia.">
           {tasks.map((task) => (
+            <TaskRow key={task.id} task={task} onChanged={async () => {
+              await load();
+              await onChanged();
+            }} />
+          ))}
+        </ItemList>
+      </Panel>
+      <Panel title="Nao realizadas" icon={AlertCircle}>
+        <ItemList empty="Nada vencido na ultima semana.">
+          {missedTasks.map((task) => (
             <TaskRow key={task.id} task={task} onChanged={async () => {
               await load();
               await onChanged();
@@ -591,6 +615,12 @@ function ExpensesView({ version, onChanged }: { version: number; onChanged: () =
     await onChanged();
   };
 
+  const remove = async (id: string) => {
+    await api(`/expenses/${id}`, { method: "DELETE" });
+    await load();
+    await onChanged();
+  };
+
   return (
     <section className="screen">
       <div className="month-total">
@@ -613,7 +643,12 @@ function ExpensesView({ version, onChanged }: { version: number; onChanged: () =
                 <strong>{expense.description}</strong>
                 <span>{expenseLabels[expense.category]} · {dateTime(expense.spentAt)}</span>
               </div>
-              <b>{money(expense.amount)}</b>
+              <div className="list-actions">
+                <b>{money(expense.amount)}</b>
+                <button className="icon-button ghost" onClick={() => remove(expense.id)} title="Excluir" aria-label="Excluir">
+                  <Trash2 size={17} />
+                </button>
+              </div>
             </div>
           ))}
         </ItemList>
@@ -660,6 +695,12 @@ function HealthView({ version, onChanged }: { version: number; onChanged: () => 
     setDocumentName(payload.document.originalName);
   };
 
+  const remove = async (id: string) => {
+    await api(`/health-records/${id}`, { method: "DELETE" });
+    await load();
+    await onChanged();
+  };
+
   return (
     <section className="screen">
       <InlineForm onSubmit={create}>
@@ -688,6 +729,9 @@ function HealthView({ version, onChanged }: { version: number; onChanged: () => 
                 <strong>{record.title}</strong>
                 <span>{ownerLabels[record.owner]} · {healthTypeLabels[record.type]} · {dateTime(record.scheduledAt)}</span>
               </div>
+              <button className="icon-button ghost" onClick={() => remove(record.id)} title="Excluir" aria-label="Excluir">
+                <Trash2 size={17} />
+              </button>
             </div>
           ))}
         </ItemList>
@@ -725,6 +769,12 @@ function FitnessView({ version, onChanged }: { version: number; onChanged: () =>
     await onChanged();
   };
 
+  const remove = async (id: string) => {
+    await api(`/fitness/${id}`, { method: "DELETE" });
+    await load();
+    await onChanged();
+  };
+
   return (
     <section className="screen">
       <InlineForm onSubmit={create}>
@@ -744,7 +794,12 @@ function FitnessView({ version, onChanged }: { version: number; onChanged: () =>
                 <strong>{entry.title}</strong>
                 <span>{fitnessTypeLabels[entry.type]} · {dateTime(entry.occurredAt)}</span>
               </div>
-              {entry.value ? <b>{entry.value} {entry.unit}</b> : null}
+              <div className="list-actions">
+                {entry.value ? <b>{entry.value} {entry.unit}</b> : null}
+                <button className="icon-button ghost" onClick={() => remove(entry.id)} title="Excluir" aria-label="Excluir">
+                  <Trash2 size={17} />
+                </button>
+              </div>
             </div>
           ))}
         </ItemList>
@@ -789,6 +844,12 @@ function StudiesView({ version, onChanged }: { version: number; onChanged: () =>
     await onChanged();
   };
 
+  const remove = async (id: string) => {
+    await api(`/studies/${id}`, { method: "DELETE" });
+    await load();
+    await onChanged();
+  };
+
   return (
     <section className="screen">
       <InlineForm onSubmit={create}>
@@ -805,11 +866,16 @@ function StudiesView({ version, onChanged }: { version: number; onChanged: () =>
                 <strong>{entry.title}</strong>
                 <span>{entry.subject} · {dateTime(entry.scheduledAt)} · {entry.status === "DONE" ? "Concluido" : "Pendente"}</span>
               </div>
-              {entry.status !== "DONE" ? (
-                <button className="check-button" onClick={() => complete(entry.id)} title="Concluir" aria-label="Concluir">
-                  <Check size={18} />
+              <div className="list-actions">
+                {entry.status !== "DONE" ? (
+                  <button className="check-button" onClick={() => complete(entry.id)} title="Concluir" aria-label="Concluir">
+                    <Check size={18} />
+                  </button>
+                ) : null}
+                <button className="icon-button ghost" onClick={() => remove(entry.id)} title="Excluir" aria-label="Excluir">
+                  <Trash2 size={17} />
                 </button>
-              ) : null}
+              </div>
             </div>
           ))}
         </ItemList>

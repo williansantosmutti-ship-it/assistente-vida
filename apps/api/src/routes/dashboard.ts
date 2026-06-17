@@ -12,10 +12,11 @@ dashboardRouter.get("/", async (req: AuthRequest, res, next) => {
     const todayStart = startOfDay(now);
     const todayEnd = endOfDay(now);
     const nextWeek = addDays(now, 7);
+    const weekAgo = startOfDay(addDays(now, -7));
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
 
-    const [todayTasks, upcomingTasks, expensesByCategory, monthExpenses, healthUpcoming, fitnessRecent, studiesPending] =
+    const [todayTasks, missedTasks, upcomingTasks, expensesByCategory, monthExpenses, healthUpcoming, fitnessRecent, studiesPending] =
       await Promise.all([
         prisma.task.findMany({
           where: {
@@ -24,6 +25,15 @@ dashboardRouter.get("/", async (req: AuthRequest, res, next) => {
             dueAt: { gte: todayStart, lte: todayEnd }
           },
           orderBy: { dueAt: "asc" }
+        }),
+        prisma.task.findMany({
+          where: {
+            userId: req.user!.userId,
+            status: "PENDING",
+            dueAt: { gte: weekAgo, lt: todayStart }
+          },
+          orderBy: { dueAt: "desc" },
+          take: 8
         }),
         prisma.task.findMany({
           where: {
@@ -65,6 +75,7 @@ dashboardRouter.get("/", async (req: AuthRequest, res, next) => {
 
     return res.json({
       todayTasks,
+      missedTasks,
       upcomingTasks,
       expenses: {
         total: monthExpenses._sum.amount ?? 0,

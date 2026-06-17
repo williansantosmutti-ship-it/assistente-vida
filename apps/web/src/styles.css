@@ -200,6 +200,10 @@ button {
   border-left-color: var(--amber);
 }
 
+.accent-danger {
+  border-left-color: var(--danger);
+}
+
 .panel {
   display: grid;
   gap: 10px;
@@ -260,6 +264,14 @@ button {
 .list-item b {
   flex: 0 0 auto;
   font-size: 0.9rem;
+}
+
+.list-actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  min-width: auto;
 }
 
 .task-row {

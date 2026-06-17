@@ -78,6 +78,7 @@ export type StudyEntry = {
 
 export type Dashboard = {
   todayTasks: Task[];
+  missedTasks: Task[];
   upcomingTasks: Task[];
   expenses: {
     total: string | number;

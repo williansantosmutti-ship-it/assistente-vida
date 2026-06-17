@@ -55,3 +55,12 @@ expensesRouter.post("/", async (req: AuthRequest, res, next) => {
     next(error);
   }
 });
+
+expensesRouter.delete("/:id", async (req: AuthRequest, res, next) => {
+  try {
+    await prisma.expense.delete({ where: { id: req.params.id, userId: req.user!.userId } });
+    return res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});

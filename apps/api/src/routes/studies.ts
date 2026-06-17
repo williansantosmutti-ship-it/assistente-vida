@@ -63,3 +63,12 @@ studiesRouter.patch("/:id", async (req: AuthRequest, res, next) => {
     next(error);
   }
 });
+
+studiesRouter.delete("/:id", async (req: AuthRequest, res, next) => {
+  try {
+    await prisma.studyEntry.delete({ where: { id: req.params.id, userId: req.user!.userId } });
+    return res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});

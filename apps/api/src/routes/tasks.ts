@@ -3,7 +3,8 @@ import { z } from "zod";
 import { authMiddleware, type AuthRequest } from "../auth.js";
 import { Recurrence, RecurrenceValues, TaskStatus, TaskStatusValues, TaskType, TaskTypeValues } from "../domain.js";
 import { prisma } from "../prisma.js";
-import { endOfDay, startOfDay } from "../utils/date.js";
+import { addDays, endOfDay, startOfDay } from "../utils/date.js";
+import type { Prisma } from "@prisma/client";
 
 export const tasksRouter = Router();
 tasksRouter.use(authMiddleware);
@@ -23,20 +24,47 @@ const updateTaskSchema = createTaskSchema.partial().extend({
 
 tasksRouter.get("/", async (req: AuthRequest, res, next) => {
   try {
+    const now = new Date();
+    const todayStart = startOfDay(now);
     const from = req.query.from ? new Date(String(req.query.from)) : undefined;
     const to = req.query.to ? new Date(String(req.query.to)) : undefined;
     const today = req.query.today === "true";
+    const missed = req.query.missed === "true";
+    const active = req.query.active === "true";
+    const status = req.query.status ? (String(req.query.status) as TaskStatus) : undefined;
+
+    if (missed) {
+      const weekAgo = startOfDay(addDays(now, -7));
+      const tasks = await prisma.task.findMany({
+        where: {
+          userId: req.user!.userId,
+          status: TaskStatus.PENDING,
+          dueAt: { gte: weekAgo, lt: todayStart }
+        },
+        orderBy: [{ dueAt: "desc" }, { createdAt: "desc" }]
+      });
+
+      return res.json({ tasks });
+    }
+
+    const where: Prisma.TaskWhereInput = {
+      userId: req.user!.userId,
+      status
+    };
+
+    if (active) {
+      where.OR = [
+        { dueAt: null },
+        { dueAt: { gte: todayStart } }
+      ];
+    } else if (today) {
+      where.dueAt = { gte: todayStart, lte: endOfDay(now) };
+    } else if (from || to) {
+      where.dueAt = { gte: from, lte: to };
+    }
 
     const tasks = await prisma.task.findMany({
-      where: {
-        userId: req.user!.userId,
-        status: req.query.status ? (String(req.query.status) as TaskStatus) : undefined,
-        dueAt: today
-          ? { gte: startOfDay(new Date()), lte: endOfDay(new Date()) }
-          : from || to
-            ? { gte: from, lte: to }
-            : undefined
-      },
+      where,
       orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }]
     });
 
