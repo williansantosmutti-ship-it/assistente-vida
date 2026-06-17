@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
     "local:generate": "prisma generate --schema prisma/schema.sqlite.prisma",
     "local:db": "prisma db push --schema prisma/schema.sqlite.prisma",
     "prisma:studio": "prisma studio",

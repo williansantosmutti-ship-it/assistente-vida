@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: starter
     buildCommand: npm install && npm run prisma:generate -w apps/api && npm run build -w apps/api
-    preDeployCommand: npm run db:migrate -w apps/api && npm run seed -w apps/api
+    preDeployCommand: npm run prisma:push -w apps/api && npm run seed -w apps/api
     startCommand: npm run start -w apps/api
     healthCheckPath: /health
     disk:
