@@ -9,8 +9,8 @@ dotenv.config({ path: resolve(process.cwd(), "apps/api/.env") });
 const prisma = new PrismaClient();
 
 async function main() {
-  const masterEmail = process.env.MASTER_USER_EMAIL ?? "williansantos.mutti@gmail.com";
-  const masterPassword = process.env.MASTER_USER_PASSWORD ?? "Qweiol2015";
+  const masterEmail = process.env.MASTER_USER_EMAIL ?? "usuario@local.app";
+  const masterPassword = process.env.MASTER_USER_PASSWORD ?? "troque-esta-senha";
   const passwordHash = await hashPassword(masterPassword);
 
   if (masterEmail !== "usuario@local.app") {

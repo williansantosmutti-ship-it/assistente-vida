@@ -23,7 +23,7 @@ services:
       - key: UPLOAD_DIR
         value: /data/uploads
       - key: MASTER_USER_EMAIL
-        value: williansantos.mutti@gmail.com
+        sync: false
       - key: MASTER_USER_PASSWORD
         sync: false
       - key: TELEGRAM_BOT_TOKEN
