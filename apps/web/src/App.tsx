@@ -198,7 +198,7 @@ export function App() {
       <header className="topbar">
         <div>
           <p className="eyebrow">{new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" }).format(new Date())}</p>
-          <h1>Assistente de Vida</h1>
+          <h1>Secretária Pessoal</h1>
         </div>
         <button className="icon-button" onClick={logout} aria-label="Sair" title="Sair">
           <LogOut size={20} />
@@ -273,7 +273,7 @@ function AuthScreen({ onLogin }: { onLogin: (token: string) => void }) {
         <div className="auth-mark">
           <Bell size={24} />
         </div>
-        <h1>Assistente de Vida</h1>
+        <h1>Secretária Pessoal</h1>
         <label>
           E-mail
           <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" />

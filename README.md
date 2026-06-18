@@ -1,4 +1,4 @@
-# Assistente de Vida
+# Secretária Pessoal
 
 Sistema pessoal para celular com painel web responsivo, API Node/Express, PostgreSQL, Prisma, Telegram Bot, lembretes, despesas, saude familiar, estudos, fitness, upload de documentos e entrada por texto ou voz.
 

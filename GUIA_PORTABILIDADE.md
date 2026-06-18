@@ -1,6 +1,6 @@
 # Guia de portabilidade
 
-Este pacote contem o codigo-fonte do Assistente de Vida para abrir em outro editor ou outro programa de programacao.
+Este pacote contem o codigo-fonte da Secretária Pessoal para abrir em outro editor ou outro programa de programacao.
 
 ## O que esta incluido
 
